@@ -5,7 +5,7 @@ Epoch: 1
 Summary: Eclipse Compiler for Java
 Name: ecj
 Version: 4.2.1
-Release: 6%{?dist}
+Release: 8%{?dist}
 URL: http://www.eclipse.org
 License: EPL
 Group: Development/Languages
@@ -80,6 +80,12 @@ install -pm 644 pom.xml \
 %{_javadir}/jdtcore.jar
 
 %changelog
+* Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 1:4.2.1-8
+- Mass rebuild 2014-01-24
+
+* Fri Dec 27 2013 Daniel Mach <dmach@redhat.com> - 1:4.2.1-7
+- Mass rebuild 2013-12-27
+
 * Tue Apr 09 2013 Mikolaj Izdebski <mizdebsk@redhat.com> - 1:4.2.1-6
 - Add depmap for org.eclipse.jdt.core.compiler:ecj
 - Resolves: rhbz#951064
