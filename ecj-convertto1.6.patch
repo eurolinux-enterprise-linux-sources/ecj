@@ -1,0 +1,91 @@
+diff -ur a/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java b/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java
+--- a/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java	2016-05-17 16:35:21.796601241 -0400
+@@ -776,7 +776,7 @@
+ 		}
+ 
+ 		public IteratorForReporting(List<FakedTrackingVariable> variables, Scope scope, boolean atExit) {
+-			this.varSet = new HashSet<>(variables);
++			this.varSet = new HashSet<FakedTrackingVariable>(variables);
+ 			this.scope = scope;
+ 			this.atExit = atExit;
+ 			setUpForStage(Stage.OuterLess);
+diff -ur a/org/eclipse/jdt/internal/compiler/Compiler.java b/org/eclipse/jdt/internal/compiler/Compiler.java
+--- a/org/eclipse/jdt/internal/compiler/Compiler.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/Compiler.java	2016-05-17 16:35:21.789601239 -0400
+@@ -489,7 +489,7 @@
+ 				for (CategorizedProblem problem : errors) {
+ 					if (problem.getCategoryID() == CategorizedProblem.CAT_UNSPECIFIED) {
+ 						if (this.aptProblems == null) {
+-							this.aptProblems = new HashMap<>();
++							this.aptProblems = new HashMap<String, APTProblem[]>();
+ 						}
+ 						APTProblem[] problems = this.aptProblems.get(new String(unitDecl.getFileName()));
+ 						if (problems == null) {
+diff -ur a/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java b/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java
+--- a/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java	2016-05-17 16:35:21.810601244 -0400
+@@ -1113,9 +1113,9 @@
+ 		// "Given a set of inference variables to resolve, let V be the union of this set and
+ 		//  all variables upon which the resolution of at least one variable in this set depends." 
+ 		Set<InferenceVariable> v = new HashSet<InferenceVariable>();
+-		Map<InferenceVariable,Set<InferenceVariable>> dependencies = new HashMap<>(); // compute only once, store for the final loop over 'v'.
++		Map<InferenceVariable,Set<InferenceVariable>> dependencies = new HashMap<InferenceVariable,Set<InferenceVariable>>(); // compute only once, store for the final loop over 'v'.
+ 		for (InferenceVariable iv : subSet) {
+-			Set<InferenceVariable> tmp = new HashSet<>();
++			Set<InferenceVariable> tmp = new HashSet<InferenceVariable>();
+ 			addDependencies(bounds, tmp, iv);
+ 			dependencies.put(iv, tmp);
+ 			v.addAll(tmp);
+@@ -1131,7 +1131,7 @@
+ 				// "... if αi depends on the resolution of a variable β, then either β has an instantiation or there is some j such that β = αj; ..."
+ 				Set<InferenceVariable> set = dependencies.get(currentVariable);
+ 				if (set == null) // not an element of the original subSet, still need to fetch this var's dependencies
+-					addDependencies(bounds, set = new HashSet<>(), currentVariable);
++					addDependencies(bounds, set = new HashSet<InferenceVariable>(), currentVariable);
+ 				//  "... and ii) there exists no non-empty proper subset of { α1, ..., αn } with this property."
+ 				int cur = set.size();
+ 				if (cur == 1)
+diff -ur a/org/eclipse/jdt/internal/compiler/util/Util.java b/org/eclipse/jdt/internal/compiler/util/Util.java
+--- a/org/eclipse/jdt/internal/compiler/util/Util.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/util/Util.java	2016-05-17 16:35:21.802601243 -0400
+@@ -1125,7 +1125,7 @@
+ 				bootclasspathProperty = System.getProperty("org.apache.harmony.boot.class.path"); //$NON-NLS-1$
+ 			}
+ 		}
+-		List<String> filePaths = new ArrayList<>();
++		List<String> filePaths = new ArrayList<String>();
+ 		if ((bootclasspathProperty != null) && (bootclasspathProperty.length() != 0)) {
+ 			StringTokenizer tokenizer = new StringTokenizer(bootclasspathProperty, File.pathSeparator);
+ 			while (tokenizer.hasMoreTokens()) {
+diff -ur a/org/eclipse/jdt/internal/compiler/batch/ClasspathJsr199.java b/org/eclipse/jdt/internal/compiler/batch/ClasspathJsr199.java
+--- a/org/eclipse/jdt/internal/compiler/batch/ClasspathJsr199.java	2016-02-03 10:01:58.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/batch/ClasspathJsr199.java	2016-05-17 16:35:21.790601240 -0400
+@@ -31,7 +31,7 @@
+ 
+ @SuppressWarnings({ "rawtypes", "unchecked" })
+ public class ClasspathJsr199 extends ClasspathLocation {
+-	private static final Set<JavaFileObject.Kind> fileTypes = new HashSet<>();
++	private static final Set<JavaFileObject.Kind> fileTypes = new HashSet<JavaFileObject.Kind>();
+ 
+ 	static {
+ 		fileTypes.add(JavaFileObject.Kind.CLASS);
+@@ -78,11 +75,17 @@
+ 			if (jfo == null)
+ 				return null; // most common case
+ 	
+-			try (InputStream inputStream = jfo.openInputStream()) {
++			InputStream inputStream = null;
++			try {
++				inputStream = jfo.openInputStream();
+ 				ClassFileReader reader = ClassFileReader.read(inputStream, qualifiedBinaryFileName);
+ 				if (reader != null) {
+ 					return new NameEnvironmentAnswer(reader, fetchAccessRestriction(qualifiedBinaryFileName));
+ 				}
++			} finally {
++				if (inputStream != null) {
++					inputStream.close();
++				}
+ 			}
+ 		} catch (ClassFormatException e) {
+ 			// treat as if class file is missing

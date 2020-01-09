@@ -1,28 +1,35 @@
 Epoch: 1
 
-%global qualifier 201209141800
+%global qualifier R-4.5.2-201602121500
+# Taken from MANIFEST.MF
+%global bundle_version 3.11.2
+%global bundle_qualifier v20160128-0629
 
 Summary: Eclipse Compiler for Java
 Name: ecj
-Version: 4.2.1
-Release: 8%{?dist}
+Version: 4.5.2
+Release: 3%{?dist}
 URL: http://www.eclipse.org
 License: EPL
 Group: Development/Languages
-Source0: http://download.eclipse.org/eclipse/downloads/drops4/R-%{version}-%{qualifier}/%{name}src-%{version}.jar
+Source0: http://download.eclipse.org/eclipse/downloads/drops4/%{qualifier}/%{name}src-%{version}.jar
 Source1: ecj.sh.in
-#Patched from http://repo2.maven.org/maven2/org/eclipse/jdt/core/3.3.0-v_771/core-3.3.0-v_771.pom 
 # No dependencies are needed for ecj, dependencies are for using of jdt.core which makes no sense outside of eclipse
-Source2: core-3.3.0-v_771.pom
+Source2: https://repo1.maven.org/maven2/org/eclipse/jdt/core/compiler/ecj/%{version}/ecj-%{version}.pom
+# Extracted from https://www.eclipse.org/downloads/download.php?file=/eclipse/downloads/drops4/%%{qualifier}/ecj-%%{version}.jar
+Source3: MANIFEST.MF
+
 # Always generate debug info when building RPMs (Andrew Haley)
 Patch0: %{name}-rpmdebuginfo.patch
 Patch1: %{name}-defaultto1.5.patch
-Patch2: %{name}-generatedebuginfo.patch
-# build.xml fails to include a necessary .props file in the built ecj.jar
-Patch3: %{name}-include-props.patch
+# Convert ecj source to be source level 1.6 compatible
+Patch2: ecj-convertto1.6.patch
 
+Requires: java >= 1:1.6.0
+
+BuildRequires: gzip
 BuildRequires: ant
-BuildRequires: java-devel >= 1:1.7.0 
+BuildRequires: java-devel >= 1:1.6.0 
 
 Provides: eclipse-ecj = %{epoch}:%{version}-%{release}
 Obsoletes: eclipse-ecj < 1:3.4.2-4
@@ -36,9 +43,18 @@ the JDT Core batch compiler.
 %patch0 -p1
 %patch1 -p1
 %patch2 -p1
-%patch3 -p1
+
+sed -i -e 's|debuglevel=\"lines,source\"|debug=\"yes\"|g' build.xml
+sed -i -e "s/Xlint:none/Xlint:none -encoding cp1252/g" build.xml
+sed -i -e 's|import org.eclipse.jdt.core.JavaCore;||g' org/eclipse/jdt/internal/compiler/batch/ClasspathDirectory.java
+sed -i -e 's|JavaCore.getOptions()||g' org/eclipse/jdt/internal/compiler/batch/ClasspathDirectory.java
+# Insert bundle version into messages.properties
+sed -i -e "s|bundle_version|%{bundle_version}|g" org/eclipse/jdt/internal/compiler/batch/messages.properties
+sed -i -e "s|bundle_qualifier|%{bundle_qualifier}|g" org/eclipse/jdt/internal/compiler/batch/messages.properties
 
 cp %{SOURCE2} pom.xml
+mkdir -p scripts/binary/META-INF/
+cp %{SOURCE3} scripts/binary/META-INF/MANIFEST.MF
 
 # Remove bits of JDT Core we don't want to build
 rm -r org/eclipse/jdt/internal/compiler/tool
@@ -49,7 +65,8 @@ rm -f org/eclipse/jdt/core/BuildJarIndex.java
 rm -f org/eclipse/jdt/core/JDTCompilerAdapter.java
 
 %build
-ant
+ant -verbose
+gzip ecj.1
 
 %install
 mkdir -p $RPM_BUILD_ROOT%{_javadir}
@@ -63,12 +80,16 @@ popd
 install -p -D -m0755 %{SOURCE1} $RPM_BUILD_ROOT%{_bindir}/ecj
 sed --in-place "s:@JAVADIR@:%{_javadir}:" $RPM_BUILD_ROOT%{_bindir}/ecj
 
+# Install manpage
+mkdir -p $RPM_BUILD_ROOT%{_mandir}/man1
+install -m 644 -p ecj.1.gz $RPM_BUILD_ROOT%{_mandir}/man1/ecj.1.gz
+
 # poms
 install -d -m 755 $RPM_BUILD_ROOT%{_mavenpomdir}
 install -pm 644 pom.xml \
     $RPM_BUILD_ROOT%{_mavenpomdir}/JPP-%{name}.pom
 
-%add_maven_depmap -a "org.eclipse.tycho:org.eclipse.jdt.core,org.eclipse.jdt.core.compiler:ecj" JPP-%{name}.pom %{name}.jar
+%add_maven_depmap -a "org.eclipse.tycho:org.eclipse.jdt.core,org.eclipse.jdt.core.compiler:ecj,org.eclipse.jdt:core" JPP-%{name}.pom %{name}.jar
 
 %files
 %doc about.html
@@ -78,8 +99,24 @@ install -pm 644 pom.xml \
 %{_javadir}/%{name}.jar
 %{_javadir}/eclipse-%{name}.jar
 %{_javadir}/jdtcore.jar
+%{_mandir}/man1/ecj*
 
 %changelog
+* Fri Jan 27 2017 Elliott Baron <ebaron@redhat.com> - 1:4.5.2-3
+- Add Maven alias for org.eclipse.jdt:core.
+- Resolves: rhbz#1379855
+
+* Fri Jan 27 2017 Elliott Baron <ebaron@redhat.com> - 1:4.5.2-2
+- Build for JDK 1.6 target.
+- Add ecj-convertto1.6.patch.
+- Add Requires: java >= 1:1.6.0.
+- Resolves: rhbz#1379855
+
+* Wed Sep 28 2016 Elliott Baron <ebaron@redhat.com> - 1:4.5.2-1
+- Update to upstream 4.5.2 release.
+- Add man page.
+- Resolves: rhbz#1379855, rhbz#1147565
+
 * Fri Jan 24 2014 Daniel Mach <dmach@redhat.com> - 1:4.2.1-8
 - Mass rebuild 2014-01-24
 
