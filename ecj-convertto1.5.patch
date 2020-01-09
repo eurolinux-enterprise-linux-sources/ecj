@@ -1,0 +1,518 @@
+diff -ur a/org/eclipse/jdt/internal/compiler/ast/AllocationExpression.java b/org/eclipse/jdt/internal/compiler/ast/AllocationExpression.java
+--- a/org/eclipse/jdt/internal/compiler/ast/AllocationExpression.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/ast/AllocationExpression.java	2016-05-17 16:35:21.796601241 -0400
+@@ -716,7 +716,6 @@
+ 	this.inferenceContexts.put(method, infCtx18);
+ }
+ 
+-@Override
+ public void registerResult(TypeBinding targetType, MethodBinding method) {
+ 	if (method != null && method.isConstructor()) { // ignore the factory.
+ 		if (this.solutionsPerTargetType == null)
+diff -ur a/org/eclipse/jdt/internal/compiler/ast/ExplicitConstructorCall.java b/org/eclipse/jdt/internal/compiler/ast/ExplicitConstructorCall.java
+--- a/org/eclipse/jdt/internal/compiler/ast/ExplicitConstructorCall.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/ast/ExplicitConstructorCall.java	2016-05-17 16:35:21.797601241 -0400
+@@ -499,7 +499,6 @@
+ 		// Nothing to do.
+ 	}
+ 	
+-	@Override
+ 	public void registerResult(TypeBinding targetType, MethodBinding method) {
+ 		// Nothing to do.
+ 	}
+diff -ur a/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java b/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java
+--- a/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/ast/FakedTrackingVariable.java	2016-05-17 16:35:21.796601241 -0400
+@@ -776,12 +776,11 @@
+ 		}
+ 
+ 		public IteratorForReporting(List<FakedTrackingVariable> variables, Scope scope, boolean atExit) {
+-			this.varSet = new HashSet<>(variables);
++			this.varSet = new HashSet<FakedTrackingVariable>(variables);
+ 			this.scope = scope;
+ 			this.atExit = atExit;
+ 			setUpForStage(Stage.OuterLess);
+ 		}
+-		@Override
+ 		public boolean hasNext() {
+ 			FakedTrackingVariable trackingVar;
+ 			switch (this.stage) {
+@@ -834,11 +833,9 @@
+ 			this.iterator = this.varSet.iterator();
+ 			this.stage = nextStage;
+ 		}
+-		@Override
+ 		public FakedTrackingVariable next() {
+ 			return this.next;
+ 		}
+-		@Override
+ 		public void remove() {
+ 			throw new UnsupportedOperationException();
+ 		}
+diff -ur a/org/eclipse/jdt/internal/compiler/ast/MemberValuePair.java b/org/eclipse/jdt/internal/compiler/ast/MemberValuePair.java
+--- a/org/eclipse/jdt/internal/compiler/ast/MemberValuePair.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/ast/MemberValuePair.java	2016-05-17 16:35:21.797601241 -0400
+@@ -106,7 +106,6 @@
+ 		// the next check may need deferring:
+ 		final boolean[] shouldExit = new boolean[1];
+ 		Runnable check = new Runnable() {
+-			@Override
+ 			public void run() {
+ 				if (!(MemberValuePair.this.value.isConstantValueOfTypeAssignableToType(valueType, requiredType)
+ 						|| valueType.isCompatibleWith(requiredType))) {
+diff -ur a/org/eclipse/jdt/internal/compiler/ast/MessageSend.java b/org/eclipse/jdt/internal/compiler/ast/MessageSend.java
+--- a/org/eclipse/jdt/internal/compiler/ast/MessageSend.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/ast/MessageSend.java	2016-05-17 16:35:21.796601241 -0400
+@@ -1058,7 +1058,6 @@
+ 	this.inferenceContexts.put(method, infCtx18);
+ }
+ 
+-@Override
+ public void registerResult(TypeBinding targetType, MethodBinding method) {
+ 	if (this.solutionsPerTargetType == null)
+ 		this.solutionsPerTargetType = new HashMap<TypeBinding, MethodBinding>();
+diff -ur a/org/eclipse/jdt/internal/compiler/batch/BatchCompilerRequestor.java b/org/eclipse/jdt/internal/compiler/batch/BatchCompilerRequestor.java
+--- a/org/eclipse/jdt/internal/compiler/batch/BatchCompilerRequestor.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/batch/BatchCompilerRequestor.java	2016-05-17 16:35:21.790601240 -0400
+@@ -22,7 +22,6 @@
+         this.compiler = compiler;
+     }
+ 
+-    @Override
+     public void acceptResult(CompilationResult compilationResult) {
+         if (compilationResult.lineSeparatorPositions != null) {
+             int unitLineCount = compilationResult.lineSeparatorPositions.length;
+diff -ur a/org/eclipse/jdt/internal/compiler/batch/ClasspathDirectory.java b/org/eclipse/jdt/internal/compiler/batch/ClasspathDirectory.java
+--- a/org/eclipse/jdt/internal/compiler/batch/ClasspathDirectory.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/batch/ClasspathDirectory.java	2016-05-17 16:35:21.790601240 -0400
+@@ -153,7 +153,6 @@
+ 	return sourceExists ? null : findSourceSecondaryType(typeName, qualifiedPackageName, qualifiedBinaryFileName); /* only secondary types */
+ }
+ 
+-@Override
+ public boolean hasAnnotationFileFor(String qualifiedTypeName) {
+ 	int pos = qualifiedTypeName.lastIndexOf('/');
+ 	if (pos != -1 && (pos + 1 < qualifiedTypeName.length())) {
+diff -ur a/org/eclipse/jdt/internal/compiler/batch/ClasspathJar.java b/org/eclipse/jdt/internal/compiler/batch/ClasspathJar.java
+--- a/org/eclipse/jdt/internal/compiler/batch/ClasspathJar.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/batch/ClasspathJar.java	2016-05-17 16:35:21.790601240 -0400
+@@ -125,7 +125,6 @@
+ 	}
+ 	return null;
+ }
+-@Override
+ public boolean hasAnnotationFileFor(String qualifiedTypeName) {
+ 	return this.zipFile.getEntry(qualifiedTypeName+'.'+ExternalAnnotationProvider.ANNOTION_FILE_EXTENSION) != null; 
+ }
+diff -ur a/org/eclipse/jdt/internal/compiler/classfmt/ClassFileReader.java b/org/eclipse/jdt/internal/compiler/classfmt/ClassFileReader.java
+--- a/org/eclipse/jdt/internal/compiler/classfmt/ClassFileReader.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/classfmt/ClassFileReader.java	2016-05-17 16:35:21.806601243 -0400
+@@ -456,7 +456,6 @@
+  * If 'member' is given it must be either of IBinaryField or IBinaryMethod, in which case we're seeking annotations for that member.
+  * Otherwise we're seeking annotations for top-level elements of a type (type parameters & super types).
+  */
+-@Override
+ public ITypeAnnotationWalker enrichWithExternalAnnotationsFor(ITypeAnnotationWalker walker, Object member, LookupEnvironment environment) {
+ 	if (walker == ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER && this.annotationProvider != null) {
+ 		if (member == null) {
+diff -ur a/org/eclipse/jdt/internal/compiler/classfmt/ExternalAnnotationProvider.java b/org/eclipse/jdt/internal/compiler/classfmt/ExternalAnnotationProvider.java
+--- a/org/eclipse/jdt/internal/compiler/classfmt/ExternalAnnotationProvider.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/classfmt/ExternalAnnotationProvider.java	2016-05-17 16:35:21.806601243 -0400
+@@ -210,7 +210,6 @@
+ 	}
+ 
+ 	abstract class SingleMarkerAnnotation implements IBinaryAnnotation {
+-		@Override
+ 		public IBinaryElementValuePair[] getElementValuePairs() {
+ 			return ElementValuePairInfo.NoMembers;
+ 		}
+@@ -224,12 +223,12 @@
+ 	void initAnnotations(final LookupEnvironment environment) {
+ 		if (this.NULLABLE_ANNOTATION == null) {
+ 			this.NULLABLE_ANNOTATION = new SingleMarkerAnnotation() {
+-				@Override public char[] getTypeName() { return getBinaryTypeName(environment.getNullableAnnotationName()); }
++				public char[] getTypeName() { return getBinaryTypeName(environment.getNullableAnnotationName()); }
+ 			};
+ 		}
+ 		if (this.NONNULL_ANNOTATION == null) {
+ 			this.NONNULL_ANNOTATION = new SingleMarkerAnnotation() {
+-				@Override public char[] getTypeName() { return getBinaryTypeName(environment.getNonNullAnnotationName()); }
++				public char[] getTypeName() { return getBinaryTypeName(environment.getNonNullAnnotationName()); }
+ 			};
+ 		}
+ 	}
+@@ -306,32 +305,26 @@
+ 			return this.wrapper;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toReceiver() {
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toTypeParameter(boolean isClassTypeParameter, int rank) {
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toTypeParameterBounds(boolean isClassTypeParameter, int parameterRank) {
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toTypeBound(short boundIndex) {
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toSupertype(short index, char[] superTypeSignature) {
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toTypeArgument(int rank) {
+ 			if (rank == 0) {
+ 				int start = CharOperation.indexOf('<', this.source, this.pos) + 1;
+@@ -354,7 +347,6 @@
+ 		    return new MethodAnnotationWalker(this.source, next,	this.environment);
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toWildcardBound() {
+ 			switch (this.source[this.pos]) {
+ 				case '-': 
+@@ -365,7 +357,6 @@
+ 			}			
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toNextArrayDimension() {
+ 			if (this.source[this.pos] == '[') {
+ 				int newPos = this.pos+1;
+@@ -377,12 +368,10 @@
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toNextNestedType() {
+ 			return this; // FIXME(stephan)
+ 		}
+ 
+-		@Override
+ 		public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId) {
+ 			if (this.pos != -1 && this.pos < this.source.length-2) {
+ 				switch (this.source[this.pos]) {
+@@ -485,22 +474,18 @@
+ 			return this;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toField() {
+ 			throw new UnsupportedOperationException("Cannot navigate to fields"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodReturn() {
+ 			throw new UnsupportedOperationException("Cannot navigate to method return"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodParameter(short index) {
+ 			throw new UnsupportedOperationException("Cannot navigate to method parameter"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toThrows(int index) {
+ 			throw new UnsupportedOperationException("Cannot navigate to throws"); //$NON-NLS-1$
+ 		}
+@@ -528,22 +513,18 @@
+ 
+ 		// actual implementation is inherited, main entries: toTypeArgument & getAnnotationsAtCursor
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toField() {
+ 			throw new UnsupportedOperationException("Supertype has no field annotations"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodReturn() {
+ 			throw new UnsupportedOperationException("Supertype has no method return"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodParameter(short index) {
+ 			throw new UnsupportedOperationException("Supertype has no method parameter"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toThrows(int index) {
+ 			throw new UnsupportedOperationException("Supertype has no throws"); //$NON-NLS-1$
+ 		}
+@@ -589,7 +570,6 @@
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodReturn() {
+ 			int close = CharOperation.indexOf(')', this.source);
+ 			if (close != -1) {
+@@ -600,7 +580,6 @@
+ 			return ITypeAnnotationWalker.EMPTY_ANNOTATION_WALKER;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodParameter(short index) {
+ 			if (index == 0) {
+ 				int start = CharOperation.indexOf('(', this.source) + 1;
+@@ -618,17 +597,14 @@
+ 		    return this;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toThrows(int index) {
+ 			return this;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toField() {
+ 			throw new UnsupportedOperationException("Methods have no fields"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public int getParameterCount() {
+ 			int count = 0;
+ 			int start = CharOperation.indexOf('(', this.source) + 1;
+@@ -645,22 +621,18 @@
+ 			super(source, pos, environment);
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toField() {
+ 			return this;
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodReturn() {
+ 			throw new UnsupportedOperationException("Field has no method return"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toMethodParameter(short index) {
+ 			throw new UnsupportedOperationException("Field has no method parameter"); //$NON-NLS-1$
+ 		}
+ 
+-		@Override
+ 		public ITypeAnnotationWalker toThrows(int index) {
+ 			throw new UnsupportedOperationException("Field has no throws"); //$NON-NLS-1$
+ 		}
+diff -ur a/org/eclipse/jdt/internal/compiler/classfmt/NonNullDefaultAwareTypeAnnotationWalker.java b/org/eclipse/jdt/internal/compiler/classfmt/NonNullDefaultAwareTypeAnnotationWalker.java
+--- a/org/eclipse/jdt/internal/compiler/classfmt/NonNullDefaultAwareTypeAnnotationWalker.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/classfmt/NonNullDefaultAwareTypeAnnotationWalker.java	2016-05-17 16:35:21.806601243 -0400
+@@ -76,11 +76,9 @@
+ 						'L', CharOperation.concatWith(environment.getNonNullAnnotationName(), '/'), ';');
+ 		// create the synthetic annotation:
+ 		return new IBinaryAnnotation() {
+-			@Override
+ 			public char[] getTypeName() {
+ 				return nonNullAnnotationName;
+ 			}
+-			@Override
+ 			public IBinaryElementValuePair[] getElementValuePairs() {
+ 				return null;
+ 			}
+diff -ur a/org/eclipse/jdt/internal/compiler/classfmt/TypeAnnotationWalker.java b/org/eclipse/jdt/internal/compiler/classfmt/TypeAnnotationWalker.java
+--- a/org/eclipse/jdt/internal/compiler/classfmt/TypeAnnotationWalker.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/classfmt/TypeAnnotationWalker.java	2016-05-17 16:35:21.806601243 -0400
+@@ -44,17 +44,14 @@
+ 
+ 	// ==== filter by top-level targetType: ====
+ 	
+-	@Override
+ 	public ITypeAnnotationWalker toField() {
+ 		return toTarget(AnnotationTargetTypeConstants.FIELD);
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toMethodReturn() {
+ 		return toTarget(AnnotationTargetTypeConstants.METHOD_RETURN);
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toReceiver() {
+ 		return toTarget(AnnotationTargetTypeConstants.METHOD_RECEIVER);
+ 	}
+@@ -75,7 +72,6 @@
+ 		return restrict(newMatches, 0);
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toTypeParameter(boolean isClassTypeParameter, int rank) {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -92,7 +88,6 @@
+ 		return restrict(newMatches, 0);		
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toTypeParameterBounds(boolean isClassTypeParameter, int parameterRank) {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -110,7 +105,6 @@
+ 		return restrict(newMatches, 0);	
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toTypeBound(short boundIndex) {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -131,7 +125,6 @@
+ 	 * {@inheritDoc}
+ 	 * <p>(superTypesSignature is ignored in this implementation).</p>
+ 	 */
+-	@Override
+ 	public ITypeAnnotationWalker toSupertype(short index, char[] superTypeSignature) {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -147,7 +140,6 @@
+ 		return restrict(newMatches, 0);		
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toMethodParameter(short index) {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -163,7 +155,6 @@
+ 		return restrict(newMatches, 0);		
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toThrows(int index) {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -181,7 +172,6 @@
+ 
+ 	// ==== descending into details: ====
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toTypeArgument(int rank) {
+ 		// like toNextDetail() but also checking byte 2 against rank
+ 		long newMatches = this.matches;
+@@ -201,7 +191,6 @@
+ 		return restrict(newMatches, this.pathPtr+2);		
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toWildcardBound() {
+ 		long newMatches = this.matches;
+ 		if (newMatches == 0)
+@@ -219,12 +208,10 @@
+ 		return restrict(newMatches, this.pathPtr+2);		
+ 	}
+ 
+-	@Override
+ 	public ITypeAnnotationWalker toNextArrayDimension() {
+ 		return toNextDetail(AnnotationTargetTypeConstants.NEXT_ARRAY_DIMENSION);
+ 	}
+ 	
+-	@Override
+ 	public ITypeAnnotationWalker toNextNestedType() {
+ 		return toNextDetail(AnnotationTargetTypeConstants.NEXT_NESTED_TYPE);
+ 	}
+@@ -250,7 +237,6 @@
+ 	
+ 	// ==== leaves: the actual annotations: ====
+ 	
+-	@Override
+ 	public IBinaryAnnotation[] getAnnotationsAtCursor(int currentTypeId) {
+ 		int length = this.typeAnnotations.length;
+ 		IBinaryAnnotation[] filtered = new IBinaryAnnotation[length];
+diff -ur a/org/eclipse/jdt/internal/compiler/Compiler.java b/org/eclipse/jdt/internal/compiler/Compiler.java
+--- a/org/eclipse/jdt/internal/compiler/Compiler.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/Compiler.java	2016-05-17 16:35:21.789601239 -0400
+@@ -489,7 +489,7 @@
+ 				for (CategorizedProblem problem : errors) {
+ 					if (problem.getCategoryID() == CategorizedProblem.CAT_UNSPECIFIED) {
+ 						if (this.aptProblems == null) {
+-							this.aptProblems = new HashMap<>();
++							this.aptProblems = new HashMap<String, APTProblem[]>();
+ 						}
+ 						APTProblem[] problems = this.aptProblems.get(new String(unitDecl.getFileName()));
+ 						if (problems == null) {
+diff -ur a/org/eclipse/jdt/internal/compiler/lookup/CaptureBinding18.java b/org/eclipse/jdt/internal/compiler/lookup/CaptureBinding18.java
+--- a/org/eclipse/jdt/internal/compiler/lookup/CaptureBinding18.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/lookup/CaptureBinding18.java	2016-05-17 16:35:21.811601245 -0400
+@@ -241,15 +241,12 @@
+ 				final CaptureBinding18 newCapture = (CaptureBinding18) clone(enclosingType());
+ 				newCapture.tagBits = this.tagBits;
+ 				Substitution substitution = new Substitution() {
+-					@Override
+ 					public TypeBinding substitute(TypeVariableBinding typeVariable) {
+ 						return  (typeVariable == CaptureBinding18.this) ? newCapture : typeVariable; //$IDENTITY-COMPARISON$
+ 					}
+-					@Override
+ 					public boolean isRawSubstitution() {
+ 						return false;
+ 					}
+-					@Override
+ 					public LookupEnvironment environment() {
+ 						return CaptureBinding18.this.environment;
+ 					}
+diff -ur a/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java b/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java
+--- a/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/lookup/InferenceContext18.java	2016-05-17 16:35:21.810601244 -0400
+@@ -1113,9 +1113,9 @@
+ 		// "Given a set of inference variables to resolve, let V be the union of this set and
+ 		//  all variables upon which the resolution of at least one variable in this set depends." 
+ 		Set<InferenceVariable> v = new HashSet<InferenceVariable>();
+-		Map<InferenceVariable,Set<InferenceVariable>> dependencies = new HashMap<>(); // compute only once, store for the final loop over 'v'.
++		Map<InferenceVariable,Set<InferenceVariable>> dependencies = new HashMap<InferenceVariable,Set<InferenceVariable>>(); // compute only once, store for the final loop over 'v'.
+ 		for (InferenceVariable iv : subSet) {
+-			Set<InferenceVariable> tmp = new HashSet<>();
++			Set<InferenceVariable> tmp = new HashSet<InferenceVariable>();
+ 			addDependencies(bounds, tmp, iv);
+ 			dependencies.put(iv, tmp);
+ 			v.addAll(tmp);
+@@ -1131,7 +1131,7 @@
+ 				// "... if αi depends on the resolution of a variable β, then either β has an instantiation or there is some j such that β = αj; ..."
+ 				Set<InferenceVariable> set = dependencies.get(currentVariable);
+ 				if (set == null) // not an element of the original subSet, still need to fetch this var's dependencies
+-					addDependencies(bounds, set = new HashSet<>(), currentVariable);
++					addDependencies(bounds, set = new HashSet<InferenceVariable>(), currentVariable);
+ 				//  "... and ii) there exists no non-empty proper subset of { α1, ..., αn } with this property."
+ 				int cur = set.size();
+ 				if (cur == 1)
+diff -ur a/org/eclipse/jdt/internal/compiler/lookup/InvocationSite.java b/org/eclipse/jdt/internal/compiler/lookup/InvocationSite.java
+--- a/org/eclipse/jdt/internal/compiler/lookup/InvocationSite.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/lookup/InvocationSite.java	2016-05-17 16:35:21.808601244 -0400
+@@ -57,7 +57,6 @@
+ 		public boolean receiverIsImplicitThis() { return false; }
+ 		public InferenceContext18 freshInferenceContext(Scope scope) { return null; }
+ 		public ExpressionContext getExpressionContext() { return ExpressionContext.VANILLA_CONTEXT; }
+-		@Override
+ 		public boolean isQualifiedSuper() { return false; }
+ 		public boolean checkingPotentialCompatibility() { return false; }
+ 		public void acceptPotentiallyCompatibleMethods(MethodBinding[] methods) { /* ignore */ }
+diff -ur a/org/eclipse/jdt/internal/compiler/util/Sorting.java b/org/eclipse/jdt/internal/compiler/util/Sorting.java
+--- a/org/eclipse/jdt/internal/compiler/util/Sorting.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/util/Sorting.java	2016-05-17 16:35:21.802601243 -0400
+@@ -112,7 +112,6 @@
+ 	/** Sort inference variables by rank. */
+ 	public static void sortInferenceVariables(InferenceVariable[] variables) {
+ 		Arrays.sort(variables, new Comparator<InferenceVariable>() {
+-			@Override
+ 			public int compare(InferenceVariable iv1, InferenceVariable iv2) {
+ 				return iv1.rank - iv2.rank;
+ 			}
+diff -ur a/org/eclipse/jdt/internal/compiler/util/Util.java b/org/eclipse/jdt/internal/compiler/util/Util.java
+--- a/org/eclipse/jdt/internal/compiler/util/Util.java	2016-02-03 10:02:08.000000000 -0500
++++ b/org/eclipse/jdt/internal/compiler/util/Util.java	2016-05-17 16:35:21.802601243 -0400
+@@ -1125,7 +1125,7 @@
+ 				bootclasspathProperty = System.getProperty("org.apache.harmony.boot.class.path"); //$NON-NLS-1$
+ 			}
+ 		}
+-		List<String> filePaths = new ArrayList<>();
++		List<String> filePaths = new ArrayList<String>();
+ 		if ((bootclasspathProperty != null) && (bootclasspathProperty.length() != 0)) {
+ 			StringTokenizer tokenizer = new StringTokenizer(bootclasspathProperty, File.pathSeparator);
+ 			while (tokenizer.hasMoreTokens()) {
